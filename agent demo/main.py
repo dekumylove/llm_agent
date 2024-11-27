@@ -14,7 +14,15 @@ def call_llm():
 
 # 生成prompt
 def generate_prompt(query, agent_scratch):
-
+  """
+    prompt：
+      1、人物描述
+      2、工具描述
+      3、用户的输入user_msg
+      4、assistant_msg
+      5、限制
+      6、通过反思，给出更好实践的描述
+  """
 
 def parser_thoughts(response):
   """
@@ -63,7 +71,7 @@ def agent_excute(query, max_request_time = 10):
     # 大模型调用时间
     start_time = time.time()
     # call llm
-    response = call_llm()
+    response = call_llm(prompt)
 
     end_time = time.time()
     print(f'大模型调用时间：{end_time - start_time}', flush = True)
