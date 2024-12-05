@@ -1,5 +1,8 @@
 # agent entrance
 import time
+from tools import tools_map
+from prompt import generate_prompt, user_prompt
+from model_provider import ModelProvider
 '''
 todo:
   1、环境变量设置
@@ -8,21 +11,7 @@ todo:
   4、模型的初始化
 '''
 
-# 调用大模型
-def call_llm():
-
-
-# 生成prompt
-def generate_prompt(query, agent_scratch):
-  """
-    prompt：
-      1、人物描述
-      2、工具描述
-      3、用户的输入user_msg
-      4、assistant_msg
-      5、限制
-      6、通过反思，给出更好实践的描述
-  """
+mp = ModelProvider()
 
 def parser_thoughts(response):
   """
@@ -70,8 +59,9 @@ def agent_excute(query, max_request_time = 10):
 
     # 大模型调用时间
     start_time = time.time()
+
     # call llm
-    response = call_llm(prompt)
+    response = mp.chat(prompt = prompt, chat_history = chat_history)
 
     end_time = time.time()
     print(f'大模型调用时间：{end_time - start_time}', flush = True)
@@ -111,10 +101,7 @@ def agent_excute(query, max_request_time = 10):
     observation = response.get('thoughts')['speak']
     try:
       # 将action_name映射到对应的工具函数
-      tools_map = {
-
-      }
-      func = tools_map,get(action_name)
+      func = tools_map.get(action_name)
       observation = func(**action_args)
     except Exception as err:
       print(f'调用工具失败：{err}')
@@ -124,6 +111,11 @@ def agent_excute(query, max_request_time = 10):
     user_msg = "决定使用哪个工具"
     assistant_msg = parser_thoughts(response)
     chat_history.append([user_msg, assistant_msg])
+
+    if current_request_time == max_request_time:
+      print(f'大模型调用次数超过{max_request_time}次，本次任务失败')
+    else:
+      print(f'大模型调用次数：{current_request_time}, 本次任务完成')
 
 def main():
   # 支持用户的多轮输入
