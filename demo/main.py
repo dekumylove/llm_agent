@@ -29,7 +29,8 @@ def parser_thoughts(response):
         "criticism": "criticism",
         "speak": "speak", 当前步骤，返回给用户的总结
         "reasoning": ""
-      }
+      },
+      "observation": "The overall progress of the current task"
     }
   """
   try:
@@ -37,7 +38,7 @@ def parser_thoughts(response):
     plan = thoughts['plan']
     reasoning = thoughts['reasoning']
     criticism = thoughts['criticism']
-    observation = thoughts['speak']
+    observation = response.get('observation')
     prompt = f"plan:{plan}\nreasoning:{reasoning}\ncriticism:{criticism}\nobservation:{observation}"
 
     return prompt
@@ -61,13 +62,14 @@ def agent_excute(query, max_request_time = 10):
     start_time = time.time()
 
     # call llm
+    # print(f'chat history: {chat_history}')
     response = mp.chat(prompt = prompt, chat_history = chat_history)
 
     end_time = time.time()
-    print(f'大模型调用时间：{end_time - start_time}', flush = True)
+    print(f'llm call time: {end_time - start_time}', flush = True)
 
     if not response or not isinstance(response, dict):
-      print(f'大模型调用错误，请重试：', response)
+      print(f'llm call error, please try again: {response}')
       continue
     
     """
@@ -83,7 +85,7 @@ def agent_excute(query, max_request_time = 10):
         "text": "thought",
         "plan": "plan",
         "self-criticism": "criticism",
-        "speak": "speak", 当前步骤，返回给用户的总结
+        "speak": "speak", current step, conclusion for user
         "reasoning": ""
       }
     }
@@ -98,30 +100,30 @@ def agent_excute(query, max_request_time = 10):
       print(f'final_answer:{final_answer}')
       break
 
-    observation = response.get('thoughts')['speak']
+    observation = response.get('observation')
+    print(f'observation:{observation}')
     try:
       # 将action_name映射到对应的工具函数
       func = tools_map.get(action_name)
-      observation = func(**action_args)
+      tool_result = func(**action_args)
     except Exception as err:
-      print(f'调用工具失败：{err}')
+      print(f'call tool error: {err}')
 
-    agent_scratch = agent_scratch + "\n" + observation
+    agent_scratch = agent_scratch + f'\nobservation:{observation}\ntool_result:{tool_result}'
 
-    user_msg = "决定使用哪个工具"
     assistant_msg = parser_thoughts(response)
-    chat_history.append([user_msg, assistant_msg])
+    chat_history.append([user_prompt, assistant_msg])
 
     if current_request_time == max_request_time:
-      print(f'大模型调用次数超过{max_request_time}次，本次任务失败')
+      print(f'llm call times over {max_request_time}, task failed')
     else:
-      print(f'大模型调用次数：{current_request_time}, 本次任务完成')
+      print(f'llm call times: {current_request_time}')
 
 def main():
   # 支持用户的多轮输入
-  max_request_time = 10
+  max_request_time = 20
   while True:
-    query = input("请输入您的目标")
+    query = input("please input your goal:")
     if query == "exit":
       return
     agent_excute(query, max_request_time)

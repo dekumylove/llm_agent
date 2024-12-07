@@ -15,13 +15,13 @@ def _get_workdir_root():
 workdir_root = _get_workdir_root()
 
 def read_file(filename):
-  global workdir_root
-  filename = os.path.join(workdir_root, filename)
-  if not os.path.exists(filename):
-    return f'{filename} does not exist, please check whether file exists before read'
-  with open(filename, 'r') as f:
-    return "\n".join(f.readlines)
-  
+    global workdir_root
+    filename = os.path.join(workdir_root, filename)
+    if not os.path.exists(filename):
+        return f'{filename} does not exist, please check whether file exists before read'
+    with open(filename, 'r') as f:
+        return "\n".join(f.readlines())
+
 def append_to_file(filename, content = "\n"):
   global workdir_root
   filename = os.path.join(workdir_root, filename)
@@ -125,7 +125,13 @@ tools_info = [
   }
 ]
 
-tools_map = {tool["name"]:tool["func"] for tool in tools_info}
+tools_map = {
+  "read_file": read_file,
+  "append_to_file": append_to_file,
+  "write_file": write_file,
+  "search_web": search_web,
+  "finish": None
+}
 
 def gen_tools_desc():
   tools_desc = []

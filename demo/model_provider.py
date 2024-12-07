@@ -64,8 +64,8 @@ class ModelProvider(object):
                     }
                 }
                 """
-                content = json.loads(response['choices'][0]['message']['content'])
+                content = json.loads(response.choices[0].message.content)
                 return content
             except Exception as error:
-                print(f"调用大模型失败: {error}")
+                print(f"Fail to call llm: {error}")
             return {}
